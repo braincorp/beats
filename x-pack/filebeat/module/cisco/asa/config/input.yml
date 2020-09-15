@@ -1,8 +1,8 @@
 {{ if eq .input "syslog" }}
 
-type: syslog
-protocol.udp:
-  host: "{{.syslog_host}}:{{.syslog_port}}"
+type: udp
+udp:
+host: "{{.syslog_host}}:{{.syslog_port}}"
 
 {{ else if eq .input "file" }}
 
@@ -15,9 +15,12 @@ exclude_files: [".gz$"]
 
 {{ end }}
 
-tags: {{.tags}}
+tags: {{.tags | tojson}}
+publisher_pipeline.disable_host: {{ inList .tags "forwarded" }}
 
 processors:
-{{ if .convert_timezone }}
   - add_locale: ~
-{{ end }}
+  - add_fields:
+      target: ''
+      fields:
+        ecs.version: 1.5.0

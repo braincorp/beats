@@ -23,13 +23,13 @@ import (
 	"path/filepath"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
 	"github.com/pkg/errors"
+	bolt "go.etcd.io/bbolt"
 
-	"github.com/elastic/beats/auditbeat/datastore"
-	"github.com/elastic/beats/libbeat/logp"
-	"github.com/elastic/beats/metricbeat/mb"
-	"github.com/elastic/beats/metricbeat/mb/parse"
+	"github.com/elastic/beats/v7/auditbeat/datastore"
+	"github.com/elastic/beats/v7/libbeat/logp"
+	"github.com/elastic/beats/v7/metricbeat/mb"
+	"github.com/elastic/beats/v7/metricbeat/mb/parse"
 )
 
 const (
@@ -40,6 +40,8 @@ const (
 	// Use old namespace for data until we do some field renaming for GA.
 	namespace = "."
 )
+
+var underTest = false
 
 func init() {
 	mb.Registry.MustAddMetricSet(moduleName, metricsetName, New,

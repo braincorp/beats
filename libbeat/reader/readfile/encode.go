@@ -18,11 +18,12 @@
 package readfile
 
 import (
+	"bytes"
 	"io"
 	"time"
 
-	"github.com/elastic/beats/libbeat/reader"
-	"github.com/elastic/beats/libbeat/reader/readfile/encoding"
+	"github.com/elastic/beats/v7/libbeat/reader"
+	"github.com/elastic/beats/v7/libbeat/reader/readfile/encoding"
 )
 
 // Reader produces lines by reading lines from an io.Reader
@@ -53,7 +54,7 @@ func (r EncoderReader) Next() (reader.Message, error) {
 	// Creating message object
 	return reader.Message{
 		Ts:      time.Now(),
-		Content: c,
+		Content: bytes.Trim(c, "\xef\xbb\xbf"),
 		Bytes:   sz,
 	}, err
 }

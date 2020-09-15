@@ -1,82 +1,131 @@
 [
     {
-        "ecs.version": "1.0.0",
-        "event.dataset": "system.auth",
-        "event.module": "system",
-        "system.auth.ssh.event": "Accepted",
-        "event.outcome": "success",
-        "event.category": "authentication",
         "event.action": "ssh_login",
-        "event.type": "authentication_success",
+        "event.category": [
+            "authentication"
+        ],
+        "event.dataset": "system.auth",
+        "event.kind": "event",
+        "event.module": "system",
+        "event.outcome": "success",
+        "event.timezone": "-02:00",
+        "event.type": [
+            "authentication_success",
+            "info"
+        ],
         "fileset.name": "auth",
         "host.hostname": "localhost",
         "input.type": "log",
         "log.offset": 0,
         "process.name": "sshd",
         "process.pid": 3402,
+        "related.ip": [
+            "10.0.2.2"
+        ],
+        "related.user": [
+            "vagrant"
+        ],
         "service.type": "system",
         "source.ip": "10.0.2.2",
         "source.port": 63673,
+        "system.auth.ssh.event": "Accepted",
         "system.auth.ssh.method": "publickey",
         "system.auth.ssh.signature": "RSA 39:33:99:e9:a0:dc:f2:33:a3:e5:72:3b:7c:3a:56:84",
         "user.name": "vagrant"
     },
     {
-        "ecs.version": "1.0.0",
-        "event.dataset": "system.auth",
-        "event.module": "system",
-        "system.auth.ssh.event": "Accepted",
-        "event.outcome": "success",
-        "event.category": "authentication",
         "event.action": "ssh_login",
-        "event.type": "authentication_success",
+        "event.category": [
+            "authentication"
+        ],
+        "event.dataset": "system.auth",
+        "event.kind": "event",
+        "event.module": "system",
+        "event.outcome": "success",
+        "event.timezone": "-02:00",
+        "event.type": [
+            "authentication_success",
+            "info"
+        ],
         "fileset.name": "auth",
         "host.hostname": "localhost",
         "input.type": "log",
         "log.offset": 152,
         "process.name": "sshd",
         "process.pid": 7483,
+        "related.ip": [
+            "192.168.33.1"
+        ],
+        "related.user": [
+            "vagrant"
+        ],
         "service.type": "system",
         "source.ip": "192.168.33.1",
         "source.port": 58803,
+        "system.auth.ssh.event": "Accepted",
         "system.auth.ssh.method": "password",
         "user.name": "vagrant"
     },
     {
-        "ecs.version": "1.0.0",
-        "event.dataset": "system.auth",
-        "event.module": "system",
-        "system.auth.ssh.event": "Invalid",
-        "event.outcome": "failure",
-        "event.category": "authentication",
         "event.action": "ssh_login",
-        "event.type": "authentication_failure",
+        "event.category": [
+            "authentication"
+        ],
+        "event.dataset": "system.auth",
+        "event.kind": "event",
+        "event.module": "system",
+        "event.outcome": "failure",
+        "event.timezone": "-02:00",
+        "event.type": [
+            "authentication_failure",
+            "info"
+        ],
         "fileset.name": "auth",
         "host.hostname": "localhost",
         "input.type": "log",
         "log.offset": 254,
         "process.name": "sshd",
         "process.pid": 3430,
+        "related.ip": [
+            "10.0.2.2"
+        ],
+        "related.user": [
+            "test"
+        ],
         "service.type": "system",
         "source.ip": "10.0.2.2",
+        "system.auth.ssh.event": "Invalid",
         "user.name": "test"
     },
     {
-        "ecs.version": "1.0.0",
-        "event.dataset": "system.auth",
-        "event.module": "system",
-        "system.auth.ssh.event": "Failed",
-        "event.outcome": "failure",
-        "event.category": "authentication",
         "event.action": "ssh_login",
-        "event.type": "authentication_failure",
+        "event.category": [
+            "authentication"
+        ],
+        "event.dataset": "system.auth",
+        "event.kind": "event",
+        "event.module": "system",
+        "event.outcome": "failure",
+        "event.timezone": "-02:00",
+        "event.type": [
+            "authentication_failure",
+            "info"
+        ],
         "fileset.name": "auth",
         "host.hostname": "slave22",
         "input.type": "log",
         "log.offset": 324,
         "process.name": "sshd",
         "process.pid": 5774,
+        "related.ip": [
+            "116.31.116.24"
+        ],
+        "related.user": [
+            "root"
+        ],
         "service.type": "system",
+        "source.as.number": 134764,
+        "source.as.organization.name": "CHINANET Guangdong province network",
         "source.geo.continent_name": "Asia",
         "source.geo.country_iso_code": "CN",
         "source.geo.location.lat": 23.1167,
@@ -85,18 +134,23 @@
         "source.geo.region_name": "Guangdong",
         "source.ip": "116.31.116.24",
         "source.port": 29160,
+        "system.auth.ssh.event": "Failed",
         "system.auth.ssh.method": "password",
         "user.name": "root"
     },
     {
-        "ecs.version": "1.0.0",
         "event.dataset": "system.auth",
+        "event.kind": "event",
         "event.module": "system",
+        "event.timezone": "-02:00",
         "fileset.name": "auth",
         "host.hostname": "localhost",
         "input.type": "log",
         "log.offset": 420,
         "process.name": "sudo",
+        "related.user": [
+            "vagrant"
+        ],
         "service.type": "system",
         "system.auth.sudo.command": "/bin/ls",
         "system.auth.sudo.pwd": "/home/vagrant",
@@ -105,32 +159,45 @@
         "user.name": "vagrant"
     },
     {
-        "ecs.version": "1.0.0",
         "event.dataset": "system.auth",
+        "event.kind": "event",
         "event.module": "system",
+        "event.timezone": "-02:00",
         "fileset.name": "auth",
         "host.hostname": "slave22",
         "input.type": "log",
         "log.offset": 522,
         "process.name": "sshd",
         "process.pid": 18406,
+        "related.ip": [
+            "123.57.245.163"
+        ],
         "service.type": "system",
+        "source.as.number": 37963,
+        "source.as.organization.name": "Hangzhou Alibaba Advertising Co.,Ltd.",
+        "source.geo.city_name": "Hangzhou",
         "source.geo.continent_name": "Asia",
         "source.geo.country_iso_code": "CN",
-        "source.geo.location.lat": 34.7725,
-        "source.geo.location.lon": 113.7266,
+        "source.geo.location.lat": 30.294,
+        "source.geo.location.lon": 120.1619,
+        "source.geo.region_iso_code": "CN-ZJ",
+        "source.geo.region_name": "Zhejiang",
         "source.ip": "123.57.245.163",
         "system.auth.ssh.dropped_ip": "123.57.245.163"
     },
     {
-        "ecs.version": "1.0.0",
         "event.dataset": "system.auth",
+        "event.kind": "event",
         "event.module": "system",
+        "event.timezone": "-02:00",
         "fileset.name": "auth",
         "host.hostname": "localhost",
         "input.type": "log",
         "log.offset": 617,
         "process.name": "sudo",
+        "related.user": [
+            "vagrant"
+        ],
         "service.type": "system",
         "system.auth.sudo.command": "/bin/cat /var/log/secure",
         "system.auth.sudo.pwd": "/home/vagrant",
@@ -139,14 +206,18 @@
         "user.name": "vagrant"
     },
     {
-        "ecs.version": "1.0.0",
         "event.dataset": "system.auth",
+        "event.kind": "event",
         "event.module": "system",
+        "event.timezone": "-02:00",
         "fileset.name": "auth",
         "host.hostname": "precise32",
         "input.type": "log",
         "log.offset": 736,
         "process.name": "sudo",
+        "related.user": [
+            "tsg"
+        ],
         "service.type": "system",
         "system.auth.sudo.command": "/bin/ls",
         "system.auth.sudo.error": "user NOT in sudoers",
@@ -156,9 +227,18 @@
         "user.name": "tsg"
     },
     {
-        "ecs.version": "1.0.0",
+        "event.category": [
+            "iam"
+        ],
         "event.dataset": "system.auth",
+        "event.kind": "event",
         "event.module": "system",
+        "event.outcome": "success",
+        "event.timezone": "-02:00",
+        "event.type": [
+            "group",
+            "creation"
+        ],
         "fileset.name": "auth",
         "group.id": "48",
         "group.name": "apache",
@@ -170,9 +250,18 @@
         "service.type": "system"
     },
     {
-        "ecs.version": "1.0.0",
+        "event.category": [
+            "iam"
+        ],
         "event.dataset": "system.auth",
+        "event.kind": "event",
         "event.module": "system",
+        "event.outcome": "success",
+        "event.timezone": "-02:00",
+        "event.type": [
+            "user",
+            "creation"
+        ],
         "fileset.name": "auth",
         "group.id": "48",
         "host.hostname": "localhost",
@@ -180,6 +269,9 @@
         "log.offset": 934,
         "process.name": "useradd",
         "process.pid": 6995,
+        "related.user": [
+            "apache"
+        ],
         "service.type": "system",
         "system.auth.useradd.home": "/usr/share/httpd",
         "system.auth.useradd.shell": "/sbin/nologin",

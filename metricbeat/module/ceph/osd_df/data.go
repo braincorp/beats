@@ -22,9 +22,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/elastic/beats/libbeat/common"
+	"github.com/elastic/beats/v7/libbeat/common"
 )
 
+// Node represents a node object
 type Node struct {
 	ID          int64  `json:"id"`
 	Name        string `json:"name"`
@@ -35,10 +36,12 @@ type Node struct {
 	DeviceClass string `json:"device_class"`
 }
 
+// Output contains a node list from the df response
 type Output struct {
 	Nodes []Node `json:"nodes"`
 }
 
+// OsdDfRequest contains the df response
 type OsdDfRequest struct {
 	Status string `json:"status"`
 	Output Output `json:"output"`

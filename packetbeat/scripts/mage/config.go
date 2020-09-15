@@ -18,7 +18,7 @@
 package mage
 
 import (
-	"github.com/elastic/beats/dev-tools/mage"
+	devtools "github.com/elastic/beats/v7/dev-tools/mage"
 )
 
 const (
@@ -42,25 +42,11 @@ func device(goos string) string {
 
 // ConfigFileParams returns the default ConfigFileParams for generating
 // packetbeat*.yml files.
-func ConfigFileParams() mage.ConfigFileParams {
-	return mage.ConfigFileParams{
-		ShortParts: []string{
-			mage.OSSBeatDir("_meta/beat.yml"),
-			configTemplateGlob,
-			mage.LibbeatDir("_meta/config.yml"),
-		},
-		ReferenceParts: []string{
-			mage.OSSBeatDir("_meta/beat.reference.yml"),
-			configTemplateGlob,
-			mage.LibbeatDir("_meta/config.reference.yml"),
-		},
-		DockerParts: []string{
-			mage.OSSBeatDir("_meta/beat.docker.yml"),
-			configTemplateGlob,
-			mage.LibbeatDir("_meta/config.docker.yml"),
-		},
-		ExtraVars: map[string]interface{}{
-			"device": device,
-		},
+func ConfigFileParams() devtools.ConfigFileParams {
+	p := devtools.DefaultConfigFileParams()
+	p.Templates = append(p.Templates, devtools.OSSBeatDir("_meta/config/*.tmpl"))
+	p.ExtraVars = map[string]interface{}{
+		"device": device,
 	}
+	return p
 }

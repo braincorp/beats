@@ -3,36 +3,30 @@
 // you may not use this file except in compliance with the Elastic License.
 
 // +build integration
+// +build aws
 
 package sqs
 
 import (
 	"testing"
 
-	"github.com/elastic/beats/x-pack/metricbeat/module/aws/mtest"
+	"github.com/elastic/beats/v7/x-pack/metricbeat/module/aws/mtest"
 
 	"github.com/stretchr/testify/assert"
 
-	mbtest "github.com/elastic/beats/metricbeat/mb/testing"
+	mbtest "github.com/elastic/beats/v7/metricbeat/mb/testing"
 )
 
 func TestFetch(t *testing.T) {
-	config, info := mtest.GetConfigForTest("sqs", "300s")
-	if info != "" {
-		t.Skip("Skipping TestFetch: " + info)
+	config := mtest.GetConfigForTest(t, "sqs", "300s")
+
+	metricSet := mbtest.NewReportingMetricSetV2Error(t, config)
+	events, errs := mbtest.ReportingFetchV2Error(metricSet)
+	if len(errs) > 0 {
+		t.Fatalf("Expected 0 error, had %d. %v\n", len(errs), errs)
 	}
 
-	sqsMetricSet := mbtest.NewReportingMetricSetV2(t, config)
-	events, err := mbtest.ReportingFetchV2(sqsMetricSet)
-	if err != nil {
-		t.Skip("Skipping TestFetch: failed to make api calls. Please check $AWS_ACCESS_KEY_ID, " +
-			"$AWS_SECRET_ACCESS_KEY and $AWS_SESSION_TOKEN in config.yml")
-	}
-
-	if !assert.NotEmpty(t, events) {
-		t.FailNow()
-	}
-	t.Logf("Module: %s Metricset: %s", sqsMetricSet.Module().Name(), sqsMetricSet.Name())
+	assert.NotEmpty(t, events)
 
 	for _, event := range events {
 		// RootField
@@ -53,14 +47,10 @@ func TestFetch(t *testing.T) {
 }
 
 func TestData(t *testing.T) {
-	config, info := mtest.GetConfigForTest("sqs", "300s")
-	if info != "" {
-		t.Skip("Skipping TestData: " + info)
-	}
+	config := mtest.GetConfigForTest(t, "sqs", "300s")
 
-	sqsMetricSet := mbtest.NewReportingMetricSetV2(t, config)
-	errs := mbtest.WriteEventsReporterV2(sqsMetricSet, t, "/")
-	if errs != nil {
-		t.Fatal("write", errs)
+	metricSet := mbtest.NewReportingMetricSetV2Error(t, config)
+	if err := mbtest.WriteEventsReporterV2Error(metricSet, t, "/"); err != nil {
+		t.Fatal("write", err)
 	}
 }

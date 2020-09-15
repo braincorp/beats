@@ -22,14 +22,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/elastic/beats/libbeat/beat"
-	"github.com/elastic/beats/libbeat/common"
-	"github.com/elastic/beats/libbeat/logp"
-	"github.com/elastic/beats/libbeat/processors"
+	"github.com/elastic/beats/v7/libbeat/beat"
+	"github.com/elastic/beats/v7/libbeat/common"
+	"github.com/elastic/beats/v7/libbeat/logp"
+	"github.com/elastic/beats/v7/libbeat/processors"
+	"github.com/elastic/beats/v7/libbeat/processors/checks"
+	jsprocessor "github.com/elastic/beats/v7/libbeat/processors/script/javascript/module/processor"
 )
 
 type copyFields struct {
 	config copyFieldsConfig
+	logger *logp.Logger
 }
 
 type copyFieldsConfig struct {
@@ -40,10 +43,11 @@ type copyFieldsConfig struct {
 
 func init() {
 	processors.RegisterPlugin("copy_fields",
-		configChecked(NewCopyFields,
-			requireFields("fields"),
+		checks.ConfigChecked(NewCopyFields,
+			checks.RequireFields("fields"),
 		),
 	)
+	jsprocessor.RegisterPlugin("CopyFields", NewCopyFields)
 }
 
 // NewCopyFields returns a new copy_fields processor.
@@ -59,6 +63,7 @@ func NewCopyFields(c *common.Config) (processors.Processor, error) {
 
 	f := &copyFields{
 		config: config,
+		logger: logp.NewLogger("copy_fields"),
 	}
 	return f, nil
 }
@@ -71,12 +76,14 @@ func (f *copyFields) Run(event *beat.Event) (*beat.Event, error) {
 
 	for _, field := range f.config.Fields {
 		err := f.copyField(field.From, field.To, event.Fields)
-		if err != nil && f.config.FailOnError {
+		if err != nil {
 			errMsg := fmt.Errorf("Failed to copy fields in copy_fields processor: %s", err)
-			logp.Debug("copy_fields", errMsg.Error())
-			event.Fields = backup
-			event.PutValue("error.message", errMsg.Error())
-			return event, err
+			f.logger.Debug(errMsg.Error())
+			if f.config.FailOnError {
+				event.Fields = backup
+				event.PutValue("error.message", errMsg.Error())
+				return event, err
+			}
 		}
 	}
 

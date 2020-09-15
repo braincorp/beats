@@ -23,10 +23,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/elastic/beats/libbeat/cmd/instance"
-	"github.com/elastic/beats/libbeat/idxmgmt"
-	"github.com/elastic/beats/libbeat/outputs"
-	"github.com/elastic/beats/libbeat/testing"
+	"github.com/elastic/beats/v7/libbeat/cmd/instance"
+	"github.com/elastic/beats/v7/libbeat/idxmgmt"
+	"github.com/elastic/beats/v7/libbeat/outputs"
+	"github.com/elastic/beats/v7/libbeat/testing"
 )
 
 func GenTestOutputCmd(settings instance.Settings) *cobra.Command {
@@ -34,13 +34,7 @@ func GenTestOutputCmd(settings instance.Settings) *cobra.Command {
 		Use:   "output",
 		Short: "Test " + settings.Name + " can connect to the output by using the current settings",
 		Run: func(cmd *cobra.Command, args []string) {
-			b, err := instance.NewBeat(settings.Name, settings.IndexPrefix, settings.Version)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error initializing beat: %s\n", err)
-				os.Exit(1)
-			}
-
-			err = b.InitWithSettings(settings)
+			b, err := instance.NewInitializedBeat(settings)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error initializing beat: %s\n", err)
 				os.Exit(1)

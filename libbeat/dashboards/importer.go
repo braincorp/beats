@@ -31,7 +31,7 @@ import (
 
 	errw "github.com/pkg/errors"
 
-	"github.com/elastic/beats/libbeat/common"
+	"github.com/elastic/beats/v7/libbeat/common"
 )
 
 // ErrNotFound returned when we cannot find any dashboard to import.
@@ -298,17 +298,19 @@ func (imp Importer) ImportKibanaDir(dir string) error {
 
 	versionPath := "7"
 
+	// Loads the internal index pattern
+	if imp.fields != nil {
+		if err = imp.loader.ImportIndex(imp.fields); err != nil {
+			return errw.Wrap(err, "failed to import Kibana index pattern")
+		}
+	}
+
 	dir = path.Join(dir, versionPath)
 
 	imp.loader.statusMsg("Importing directory %v", dir)
 
 	if _, err := os.Stat(dir); err != nil {
 		return newErrNotFound("No directory %s", dir)
-	}
-
-	// Loads the internal index pattern
-	if imp.fields != nil {
-		imp.loader.ImportIndex(imp.fields)
 	}
 	check := []string{}
 	if !imp.cfg.OnlyDashboards {

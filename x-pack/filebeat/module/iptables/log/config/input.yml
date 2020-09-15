@@ -18,9 +18,7 @@ exclude_files: [".gz$"]
 tags: {{.tags}}
 
 processors:
-{{ if .convert_timezone }}
   - add_locale: ~
-{{ end }}
 {{ if .community_id }}
   - dissect:
       tokenizer: "%{} SRC=%{source.ip} DST=%{destination.ip} "
@@ -53,3 +51,7 @@ processors:
         icmp_type: iptables.icmp.type
         icmp_code: iptables.icmp.code
 {{ end}}
+  - add_fields:
+      target: ''
+      fields:
+        ecs.version: 1.5.0

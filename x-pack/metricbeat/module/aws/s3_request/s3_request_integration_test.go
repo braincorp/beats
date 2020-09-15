@@ -3,6 +3,7 @@
 // you may not use this file except in compliance with the Elastic License.
 
 // +build integration
+// +build aws
 
 package s3_request
 
@@ -11,28 +12,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	mbtest "github.com/elastic/beats/metricbeat/mb/testing"
-	"github.com/elastic/beats/x-pack/metricbeat/module/aws/mtest"
+	mbtest "github.com/elastic/beats/v7/metricbeat/mb/testing"
+	"github.com/elastic/beats/v7/x-pack/metricbeat/module/aws/mtest"
 )
 
 func TestFetch(t *testing.T) {
-	config, info := mtest.GetConfigForTest("s3_request", "86400s")
-	if info != "" {
-		t.Skip("Skipping TestFetch: " + info)
+	config := mtest.GetConfigForTest(t, "s3_request", "86400s")
+
+	metricSet := mbtest.NewReportingMetricSetV2Error(t, config)
+	events, errs := mbtest.ReportingFetchV2Error(metricSet)
+	if len(errs) > 0 {
+		t.Fatalf("Expected 0 error, had %d. %v\n", len(errs), errs)
 	}
 
-	s3DailyMetricSet := mbtest.NewReportingMetricSetV2(t, config)
-	events, err := mbtest.ReportingFetchV2(s3DailyMetricSet)
-	if err != nil {
-		t.Skip("Skipping TestFetch: failed to make api calls. Please check $AWS_ACCESS_KEY_ID, " +
-			"$AWS_SECRET_ACCESS_KEY and $AWS_SESSION_TOKEN in config.yml")
-	}
-
-	assert.Empty(t, err)
-	if !assert.NotEmpty(t, events) {
-		t.FailNow()
-	}
-	t.Logf("Module: %s Metricset: %s", s3DailyMetricSet.Module().Name(), s3DailyMetricSet.Name())
+	assert.NotEmpty(t, events)
 
 	for _, event := range events {
 		// RootField
@@ -61,14 +54,10 @@ func TestFetch(t *testing.T) {
 }
 
 func TestData(t *testing.T) {
-	config, info := mtest.GetConfigForTest("s3_request", "86400s")
-	if info != "" {
-		t.Skip("Skipping TestData: " + info)
-	}
+	config := mtest.GetConfigForTest(t, "s3_request", "86400s")
 
-	ec2MetricSet := mbtest.NewReportingMetricSetV2(t, config)
-	errs := mbtest.WriteEventsReporterV2(ec2MetricSet, t, "/")
-	if errs != nil {
-		t.Fatal("write", errs)
+	metricSet := mbtest.NewReportingMetricSetV2Error(t, config)
+	if err := mbtest.WriteEventsReporterV2Error(metricSet, t, "/"); err != nil {
+		t.Fatal("write", err)
 	}
 }

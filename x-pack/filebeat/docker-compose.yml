@@ -5,6 +5,7 @@ services:
     depends_on:
       - proxy_dep
     environment:
+      - ES_BEATS=/go/src/github.com/elastic/beats
       - BEAT_STRICT_PERMS=false
       - ES_HOST=elasticsearch
       - ES_PORT=9200
@@ -23,6 +24,8 @@ services:
 
   elasticsearch:
     extends:
-      file: ${ES_BEATS}/testing/environments/${TESTING_ENVIRONMENT}.yml
+      file: ${ES_BEATS}/testing/environments/${STACK_ENVIRONMENT}.yml
       service: elasticsearch
+    environment:
+      script.cache.max_size: "500"
 

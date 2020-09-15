@@ -19,10 +19,11 @@ package template
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
-	"github.com/elastic/beats/libbeat/common"
-	"github.com/elastic/beats/libbeat/mapping"
+	"github.com/elastic/beats/v7/libbeat/common"
+	"github.com/elastic/beats/v7/libbeat/mapping"
 )
 
 // Processor struct to process fields to template
@@ -38,15 +39,27 @@ var (
 
 const scalingFactorKey = "scalingFactor"
 
-// Process recursively processes the given fields and writes the template in the given output
-func (p *Processor) Process(fields mapping.Fields, path string, output common.MapStr) error {
-	for _, field := range fields {
+type fieldState struct {
+	DefaultField bool
+	Path         string
+}
 
+// Process recursively processes the given fields and writes the template in the given output
+func (p *Processor) Process(fields mapping.Fields, state *fieldState, output common.MapStr) error {
+	if state == nil {
+		// Set the defaults.
+		state = &fieldState{DefaultField: true}
+	}
+
+	for _, field := range fields {
 		if field.Name == "" {
 			continue
 		}
 
-		field.Path = path
+		field.Path = state.Path
+		if field.DefaultField == nil {
+			field.DefaultField = &state.DefaultField
+		}
 		var indexMapping common.MapStr
 
 		switch field.Type {
@@ -68,13 +81,9 @@ func (p *Processor) Process(fields mapping.Fields, path string, output common.Ma
 			indexMapping = p.array(&field)
 		case "alias":
 			indexMapping = p.alias(&field)
+		case "histogram":
+			indexMapping = p.histogram(&field)
 		case "group":
-			var newPath string
-			if path == "" {
-				newPath = field.Name
-			} else {
-				newPath = path + "." + field.Name
-			}
 			indexMapping = common.MapStr{}
 			if field.Dynamic.Value != nil {
 				indexMapping["dynamic"] = field.Dynamic.Value
@@ -93,7 +102,11 @@ func (p *Processor) Process(fields mapping.Fields, path string, output common.Ma
 				}
 			}
 
-			if err := p.Process(field.Fields, newPath, properties); err != nil {
+			groupState := &fieldState{Path: field.Name, DefaultField: *field.DefaultField}
+			if state.Path != "" {
+				groupState.Path = state.Path + "." + field.Name
+			}
+			if err := p.Process(field.Fields, groupState, properties); err != nil {
 				return err
 			}
 			indexMapping["properties"] = properties
@@ -101,9 +114,11 @@ func (p *Processor) Process(fields mapping.Fields, path string, output common.Ma
 			indexMapping = p.other(&field)
 		}
 
-		switch field.Type {
-		case "", "keyword", "text":
-			addToDefaultFields(&field)
+		if *field.DefaultField {
+			switch field.Type {
+			case "", "keyword", "text":
+				addToDefaultFields(&field)
+			}
 		}
 
 		if len(indexMapping) > 0 {
@@ -207,7 +222,7 @@ func (p *Processor) keyword(f *mapping.Field) common.MapStr {
 
 	if len(f.MultiFields) > 0 {
 		fields := common.MapStr{}
-		p.Process(f.MultiFields, "", fields)
+		p.Process(f.MultiFields, nil, fields)
 		property["fields"] = fields
 	}
 
@@ -243,7 +258,7 @@ func (p *Processor) text(f *mapping.Field) common.MapStr {
 
 	if len(f.MultiFields) > 0 {
 		fields := common.MapStr{}
-		p.Process(f.MultiFields, "", fields)
+		p.Process(f.MultiFields, nil, fields)
 		properties["fields"] = fields
 	}
 
@@ -275,6 +290,18 @@ func (p *Processor) alias(f *mapping.Field) common.MapStr {
 	return properties
 }
 
+func (p *Processor) histogram(f *mapping.Field) common.MapStr {
+	// Histograms were introduced in Elasticsearch 7.6, ignore if unsupported
+	if p.EsVersion.LessThan(common.MustNewVersion("7.6.0")) {
+		return nil
+	}
+
+	properties := getDefaultProperties(f)
+	properties["type"] = "histogram"
+
+	return properties
+}
+
 func (p *Processor) object(f *mapping.Field) common.MapStr {
 	matchType := func(onlyType string, mt string) string {
 		if mt != "" {
@@ -293,11 +320,12 @@ func (p *Processor) object(f *mapping.Field) common.MapStr {
 
 	for _, otp := range otParams {
 		dynProperties := getDefaultProperties(f)
+		var matchingType string
 
 		switch otp.ObjectType {
 		case "scaled_float":
 			dynProperties = p.scaledFloat(f, common.MapStr{scalingFactorKey: otp.ScalingFactor})
-			addDynamicTemplate(f, dynProperties, matchType("*", otp.ObjectTypeMappingType))
+			matchingType = matchType("*", otp.ObjectTypeMappingType)
 		case "text":
 			dynProperties["type"] = "text"
 
@@ -305,14 +333,38 @@ func (p *Processor) object(f *mapping.Field) common.MapStr {
 				dynProperties["type"] = "string"
 				dynProperties["index"] = "analyzed"
 			}
-			addDynamicTemplate(f, dynProperties, matchType("string", otp.ObjectTypeMappingType))
+			matchingType = matchType("string", otp.ObjectTypeMappingType)
 		case "keyword":
 			dynProperties["type"] = otp.ObjectType
-			addDynamicTemplate(f, dynProperties, matchType("string", otp.ObjectTypeMappingType))
+			matchingType = matchType("string", otp.ObjectTypeMappingType)
 		case "byte", "double", "float", "long", "short", "boolean":
 			dynProperties["type"] = otp.ObjectType
-			addDynamicTemplate(f, dynProperties, matchType(otp.ObjectType, otp.ObjectTypeMappingType))
+			matchingType = matchType(otp.ObjectType, otp.ObjectTypeMappingType)
+		case "histogram":
+			dynProperties["type"] = otp.ObjectType
+			matchingType = matchType("*", otp.ObjectTypeMappingType)
+		default:
+			continue
 		}
+
+		path := f.Path
+		if len(path) > 0 {
+			path += "."
+		}
+		path += f.Name
+		pathMatch := path
+		// ensure the `path_match` string ends with a `*`
+		if !strings.ContainsRune(path, '*') {
+			pathMatch += ".*"
+		}
+		// When multiple object type parameters are detected for a field,
+		// add a unique part to the name of the dynamic template.
+		// Duplicated dynamic template names can lead to errors when template
+		// inheritance is applied, and will not be supported in future versions
+		if len(otParams) > 1 {
+			path = fmt.Sprintf("%s_%s", path, matchingType)
+		}
+		addDynamicTemplate(path, pathMatch, dynProperties, matchingType)
 	}
 
 	properties := getDefaultProperties(f)
@@ -328,18 +380,10 @@ func (p *Processor) object(f *mapping.Field) common.MapStr {
 	return properties
 }
 
-func addDynamicTemplate(f *mapping.Field, properties common.MapStr, matchType string) {
-	path := ""
-	if len(f.Path) > 0 {
-		path = f.Path + "."
-	}
-	pathMatch := path + f.Name
-	if !strings.ContainsRune(pathMatch, '*') {
-		pathMatch += ".*"
-	}
+func addDynamicTemplate(path string, pathMatch string, properties common.MapStr, matchType string) {
 	template := common.MapStr{
 		// Set the path of the field as name
-		path + f.Name: common.MapStr{
+		path: common.MapStr{
 			"mapping":            properties,
 			"match_mapping_type": matchType,
 			"path_match":         pathMatch,

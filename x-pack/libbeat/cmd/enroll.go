@@ -10,24 +10,18 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/elastic/beats/libbeat/cmd/instance"
-	"github.com/elastic/beats/libbeat/common"
-	"github.com/elastic/beats/libbeat/common/cli"
-	"github.com/elastic/beats/x-pack/libbeat/management"
-	"github.com/elastic/beats/x-pack/libbeat/management/api"
+	"github.com/elastic/beats/v7/libbeat/cmd/instance"
+	"github.com/elastic/beats/v7/libbeat/common"
+	"github.com/elastic/beats/v7/libbeat/common/cli"
+	"github.com/elastic/beats/v7/x-pack/libbeat/management"
+	"github.com/elastic/beats/v7/x-pack/libbeat/management/api"
 )
 
 func getBeat(name, version string) (*instance.Beat, error) {
-	b, err := instance.NewBeat(name, "", version)
-
+	b, err := instance.NewInitializedBeat(instance.Settings{Name: name, Version: version})
 	if err != nil {
 		return nil, fmt.Errorf("error creating beat: %s", err)
 	}
-
-	if err = b.Init(); err != nil {
-		return nil, fmt.Errorf("error initializing beat: %s", err)
-	}
-
 	return b, nil
 }
 
